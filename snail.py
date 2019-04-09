@@ -21,8 +21,9 @@ def ang_rt(ang, ang_):
     return (ang + ang_) % 6
 
 def pos_rt(pos, ang_):
-    pos = islice(cycle(pos), st_ang[ang_], 3)
-    if ang % 2:
+    ang_ = st_ang[ang_]
+    pos = islice(cycle(pos), ang_, ang_ + 3)
+    if ang_ % 2:
         pos = map(neg, pos)
     return tuple(pos)
     

@@ -17,22 +17,22 @@ def block(dim, ang=0):
 def module(pulse, name=-1, g=-1):
     return Module(name, g, pulse, None, None)
 
-def ang_rt(ang0, ang):
-    return (ang0 + ang) % 6
+def ang_rt(ang, ang_):
+    return (ang + ang_) % 6
 
-def pos_rt(pos0, ang):
-    pos = islice(cycle(pos0), st_ang[ang], 3)
+def pos_rt(pos, ang_):
+    pos = islice(cycle(pos), st_ang[ang_], 3)
     if ang % 2:
         pos = map(neg, pos)
     return tuple(pos)
     
-def pos_add(pos0, pos):
-    return tuple(map(add, pos0, pos))
+def pos_add(pos, pos_):
+    return tuple(map(ang_rt, pos, pos_))
 
 def pos_cmp(pos):
     pos0 = pos[0::2]
-    pos1 = islice(cycle(pos[1::2], 1, 3))
-    return map(sub, pos0, pos1)
+    pos1 = islice(cycle(pos), 3, 9, 2)
+    return tuple(map(sub, pos0, pos1))
 
 def pos_part(dim, ang, on_base_pos):
     r, d = dim
@@ -57,7 +57,7 @@ def block_move(base, block, on_base_pos, on_base_ang):
     return block._replace(ang=ang_, pos=pos_)
 
 def blocks_move(base, blocks, *args):
-    args = ((arg, arg) if arg is int else arg \
+    args = ((arg, arg) if arg is int else arg
             for arg in args)
     blocks = zip(blocks, args)
     return [block_move(base, block, arg[0], arg[1]) 

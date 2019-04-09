@@ -1,12 +1,11 @@
 from collections import namedtuple
-from operator import neg, add, sub
+from operator import neg, add, sub, mul
 from itertools import cycle, islice
 from functools import reduce
 
 ax_inv = (0, 5, 4, 3, 2, 1)
 cn_inv = (3, 4, 5, 0, 1, 2)
 is_ext = (1, 1, 0, 0, 0, 1)
-st_ang = (0, 2, 1, 0, 2, 1)
 
 Block = namedtuple("Block", "dim ang pos")
 Module = namedtuple("Module", "name g pulse shift pos")
@@ -21,14 +20,13 @@ def ang_rt(ang, ang_):
     return (ang + ang_) % 6
 
 def pos_rt(pos, ang_):
-    ang_ = st_ang[ang_]
-    pos = islice(cycle(pos), ang_, ang_ + 3)
+    pos = islice(cycle(pos), ang_ % 3, ang_ % 3 + 3)
     if ang_ % 2:
         pos = map(neg, pos)
     return tuple(pos)
     
 def pos_add(pos, pos_):
-    return tuple(map(ang_rt, pos, pos_))
+    return tuple(map(add, pos, pos_))
 
 def pos_cmp(pos):
     pos0 = pos[0::2]
@@ -42,6 +40,32 @@ def pos_part(dim, ang, on_base_pos):
     part[ang] += d * is_ext[on_base_pos]
     part[ang_rt(on_base_pos, ang)] += r 
     return tuple(pos_cmp(part))
+
+def pos_norm(pos):
+    nums = tuple(filter(lambda c: c, pos))
+    if len(nums):
+        dif = min(nums, key=abs)
+        pos = tuple(map(lambda c: c - dif, pos))
+        nums = tuple(filter(lambda c: c, pos))
+    else:
+        return (0, 0)
+    if len(nums)  == 2 and reduce(mul, nums) < 0:
+        dif = min(pos, key=abs)
+        pos = tuple(map(lambda c: c - dif, pos))
+        
+    ri = max(range(3), key=lambda i: abs(pos[i]))
+    r = pos[ri]
+    pos = tuple(map(lambda c: c if c else r, pos))
+    ai = min(range(3), key=lambda i: abs(pos[i])) 
+    ang = ri * 2
+    if r < 0:
+        ang = ang_rt(ang, 3)
+        r = abs(r)
+    if ai != (ri + 1) % 3:
+        a = r * 6 - abs(pos[ai]) - r * (6 - ang)
+    else:
+        a = abs(pos[ai]) + r * ang
+    return r, a
 
 def module_set(base, module, on_base_pos, shif=(0, 0)):
     pos_ = pos_add(base.pos,
@@ -63,25 +87,6 @@ def blocks_move(base, blocks, *args):
     blocks = zip(blocks, args)
     return [block_move(base, block, arg[0], arg[1]) 
             for block, arg in blocks]
-
-def sgn(x):
-    return (x > 0) - (x < 0)
-
-def pos_norm(pos):
-    max_i = max(range(3), key=lambda i: abs(pos[i]))
-    pos_p = set(range(3))
-    pos_p.remove(max_i)
-    sgn0 = sgn(max_i)
-    sgn1 = sum(map(sgn, pos_p))
-    dif = min(pos_p) if sgn0 == sgn1 else max(pos_p) 
-    pos_ = map(
-            lambda i: pos[i] + dif if i == max_i else pos[i] - dif, 
-            range(3))
-    pos_ = tuple(pos_)
-    r = pos_[max_i]
-    a = sum(pos_) + r * (max_i - 1)
-    pos_ = r, a
-    return pos_
 
 def block_nodes(block):
     r, d = block.dim

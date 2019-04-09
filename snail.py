@@ -14,7 +14,7 @@ Module = namedtuple("Module", "name g pulse shift pos")
 def block(dim, ang=0):
     return Block(dim, ang, (0, 0, 0))
 
-def module(pulse, name=-1, g=-1)
+def module(pulse, name=-1, g=-1):
     return Module(name, g, pulse, None, None)
 
 def ang_rt(ang0, ang):
@@ -32,7 +32,7 @@ def pos_add(pos0, pos):
 def pos_cmp(pos):
     pos0 = pos[0::2]
     pos1 = islice(cycle(pos[1::2], 1, 3))
-    return map(sub, pos0, pos1]))
+    return map(sub, pos0, pos1)
 
 def pos_part(dim, ang, on_base_pos):
     r, d = dim
@@ -57,7 +57,7 @@ def block_move(base, block, on_base_pos, on_base_ang):
     return block._replace(ang=ang_, pos=pos_)
 
 def blocks_move(base, blocks, *args):
-    args = (arg, arg if arg is int else arg 
+    args = ((arg, arg) if arg is int else arg \
             for arg in args)
     blocks = zip(blocks, args)
     return [block_move(base, block, arg[0], arg[1]) 
@@ -72,7 +72,7 @@ def pos_norm(pos):
     pos_p.remove(max_i)
     sgn0 = sgn(max_i)
     sgn1 = sum(map(sgn, pos_p))
-    dif = min(pos_p) if sgn0 == sgn1 else max(pos_p)) 
+    dif = min(pos_p) if sgn0 == sgn1 else max(pos_p) 
     pos_ = map(
             lambda i: pos[i] + dif if i == max_i else pos[i] - dif, 
             range(3))

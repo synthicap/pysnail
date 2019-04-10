@@ -67,10 +67,10 @@ def pos_norm(pos):
         a = abs(pos[ai]) + r * ang
     return r, a
 
-def module_set(base, module, on_base_pos, shif=(0, 0)):
+def module_set(base, module, on_base_pos, shift_=(0, 0)):
     pos_ = pos_add(base.pos,
             pos_part(base.dim, base.ang, on_base_pos))
-    return module._replace(pos=pos_)
+    return module._replace(pos=pos_, shift=shift_)
 
 def block_move(base, block, on_base_pos, on_base_ang):
     ang_ = ang_rt(base.ang, on_base_ang)
@@ -81,12 +81,14 @@ def block_move(base, block, on_base_pos, on_base_ang):
     ang_ = ang_rt(ang_, block.ang)
     return block._replace(ang=ang_, pos=pos_)
 
-def blocks_move(base, blocks, *args):
-    args = ((arg, arg) if arg is int else arg
-            for arg in args)
-    blocks = zip(blocks, args)
-    return [block_move(base, block, arg[0], arg[1]) 
-            for block, arg in blocks]
+def blocks_move(base, blocks, on_base_pos, on_base_ang=None):
+    if on_base_ang is None:
+        on_base_ang = on_base_pos
+    blocks = map(
+            lambda b: (b, on_base_pos, on_base_ang), 
+            blocks) 
+    return [block_move(base, block, ob_pos, ob_ang) 
+            for block, ob_pos, ob_ang in blocks]
 
 def block_nodes(block):
     r, d = block.dim
@@ -114,15 +116,15 @@ def block_nodes(block):
 class Snail():
     def get_data(self):
         nodes = set()
-        blocks = self.get_blocks()
+        blocks = self.blocks
         for block in blocks:
-            nodes |= set(block_nodes(block_nodes))
+            nodes |= set(block_nodes(block))
         nodes = list(nodes)
-        modules = self.get_modules()
+        modules = self.modules
         indexes = map(
                 lambda m: nodes.index(pos_norm(m.pos)), 
                 modules)
-        modules = list(map(lambda i, m: m.replace(pos=i)), 
-                    indexes, modules)
+        modules = list(map(lambda i, m: m._replace(pos=i),
+                    indexes, modules))
         return nodes, modules
 

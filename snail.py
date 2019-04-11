@@ -1,6 +1,6 @@
 from collections import namedtuple
 from operator import neg, add, sub, mul
-from itertools import cycle, islice
+from itertools import cycle, islice, chain
 from functools import reduce
 
 ax_inv = (0, 5, 4, 3, 2, 1)
@@ -42,30 +42,45 @@ def pos_part(dim, ang, on_base_pos):
     return tuple(pos_cmp(part))
 
 def pos_norm(pos):
-    nums = tuple(filter(lambda c: c, pos))
-    if len(nums):
-        dif = min(nums, key=abs)
-        pos = tuple(map(lambda c: c - dif, pos))
-        nums = tuple(filter(lambda c: c, pos))
-    else:
+    ps = tuple(filter(lambda i: pos[i] > 0, range(3)))
+    ns = tuple(filter(lambda i: pos[i] < 0, range(3)))
+    if len(ps) + len(ns) == 0:
         return (0, 0)
-    if len(nums)  == 2 and reduce(mul, nums) < 0:
-        dif = min(pos, key=abs)
-        pos = tuple(map(lambda c: c - dif, pos))
-        
+    if len(ps) * len(ns) == 2:
+        dif = max(
+            map(lambda i: pos[i], max(ps, ns, key=len)), 
+            key=abs)
+    elif len(ps) + len(ns) + min(len(ps), len(ns)) == 3:
+        dif = min(
+            map(lambda i: pos[i], chain(ps, ns)), 
+            key=abs)
+    else:
+        dif = 0
+    print(pos, end=' ')
+    pos = tuple(map(lambda c: c - dif, pos))
     ri = max(range(3), key=lambda i: abs(pos[i]))
     r = pos[ri]
-    pos = tuple(map(lambda c: c if c else r, pos))
-    ai = min(range(3), key=lambda i: abs(pos[i])) 
-    ang = ri * 2
+    pos = tuple(map(lambda i: 0 if i == ri else pos[i], 
+                range(3)))
+    ai = max(range(3), key=lambda i: abs(pos[i]))
+    a = pos[ai]
+
+    ang_r = ri * 2
     if r < 0:
-        ang = ang_rt(ang, 3)
-        r = abs(r)
-    if ai != (ri + 1) % 3:
-        a = r * 6 - abs(pos[ai]) - r * (6 - ang)
+        ang_r = ang_rt(ang_r, 3)
+    ang_a = ai * 2
+    if a < 0:
+        ang_a = ang_rt(ang_a, 3)
+    r = abs(r)
+    a = abs(a)
+
+    if ang_a == ang_rt(ang_r, 2): 
+        a += r * ang_r
     else:
-        a = abs(pos[ai]) + r * ang
-    return r, a
+        a = r * ang_r - a
+    a %= r * 6
+    print((r, a))
+    return (r, a)
 
 def module_set(base, module, on_base_pos, shift_=(0, 0)):
     pos_ = pos_add(base.pos,

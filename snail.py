@@ -56,7 +56,7 @@ def pos_norm(pos):
             key=abs)
     else:
         dif = 0
-    print(pos, end=' ')
+
     pos = tuple(map(lambda c: c - dif, pos))
     ri = max(range(3), key=lambda i: abs(pos[i]))
     r = pos[ri]
@@ -79,7 +79,6 @@ def pos_norm(pos):
     else:
         a = r * ang_r - a
     a %= r * 6
-    print((r, a))
     return (r, a)
 
 def module_set(base, module, on_base_pos, shift_=(0, 0)):
